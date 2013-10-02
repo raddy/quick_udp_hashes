@@ -126,9 +126,22 @@ def open_pcap(some_pcap):
             data = ((<char *> udpHdr) + sizeof(udphdr))
             data_len = (packet_length - sizeof(udphdr) - ip_hdr_len)
             data[data_len] = 0
-            hash_info = murmurhash3_32(data,positive=True)
+            #hash_info = murmurhash3_32(data,positive=True)
+            
+            if data[4]!='4':
+                continue
+            str_data = str(data)
+            if str_data[0:2]=='A3' or str_data[0:2] == 'G7':#keep
+                if str_data[2:4]=='01':#futures
+                    hash_info = str_data[5:16]+str_data[75:82]
+                elif str_data[2:4]=='03':#options
+                    hash_info = str_data[5:16]+str_data[62:70]
+            else:
+                continue
+            
             if hashes.has_key(hash_info):
                 hashes[hash_info] = np.NaN
+                print 'Dup found'
             else:
                 hashes[hash_info] = header.ts.tv_sec * 1000000000 +header.ts.tv_usec*1000 + KST_TZ_OFFSET
 
